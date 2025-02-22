@@ -14,10 +14,10 @@ class MaskDictionaryModel:
     promote_type:str = "mask"
     labels:dict = field(default_factory=dict)
 
-    def add_new_frame_annotation(self, mask_list, box_list, label_list, background_value = 0):
+    def add_new_frame_annotation(self, mask_list, box_list, label_list, scores_list, background_value = 0):
         mask_img = torch.zeros(mask_list.shape[-2:])
         anno_2d = {}
-        for idx, (mask, box, label) in enumerate(zip(mask_list, box_list, label_list)):
+        for idx, (mask, box, label, score) in enumerate(zip(mask_list, box_list, label_list, scores_list)):
             final_index = background_value + idx + 1
 
             if mask.shape[0] != mask_img.shape[0] or mask.shape[1] != mask_img.shape[1]:
@@ -27,7 +27,8 @@ class MaskDictionaryModel:
             # print("label", label)
             name = label
             box = box # .numpy().tolist()
-            new_annotation = ObjectInfo(instance_id = final_index, mask = mask, class_name = name, x1 = box[0], y1 = box[1], x2 = box[2], y2 = box[3])
+            score = score.item()
+            new_annotation = ObjectInfo(instance_id = final_index, mask = mask, class_name = name, x1 = box[0], y1 = box[1], x2 = box[2], y2 = box[3], score = score)
             anno_2d[final_index] = new_annotation
 
         # np.save(os.path.join(output_dir, output_file_name), mask_img.numpy().astype(np.uint16))
@@ -52,6 +53,7 @@ class MaskDictionaryModel:
                     new_mask_copy.mask = seg_mask.mask
                     new_mask_copy.instance_id = object_info.instance_id
                     new_mask_copy.class_name = seg_mask.class_name
+                    new_mask_copy.score = object_info.score
                     break
                 
             if not flag:
@@ -60,6 +62,7 @@ class MaskDictionaryModel:
                 new_mask_copy.instance_id = objects_count
                 new_mask_copy.mask = seg_mask.mask
                 new_mask_copy.class_name = seg_mask.class_name
+                new_mask_copy.score = seg_mask.score
             updated_masks[flag] = new_mask_copy
         self.labels = updated_masks
         return objects_count
@@ -137,6 +140,7 @@ class ObjectInfo:
     x2:int = 0
     y2:int = 0
     logit:float = 0.0
+    score:float = 0.0
 
     def get_mask(self):
         return self.mask
@@ -172,5 +176,6 @@ class ObjectInfo:
             "y1": self.y1,
             "x2": self.x2,
             "y2": self.y2,
-            "logit": self.logit
+            "logit": self.logit,
+            "score": self.score
         }
