@@ -26,7 +26,8 @@ class CommonUtils:
     @staticmethod
     def draw_masks_and_box_with_supervision(raw_image_path, mask_path, json_path, output_path):
         CommonUtils.creat_dirs(output_path)
-        raw_image_name_list = os.listdir(raw_image_path)
+        # get all image name that ends with .jpg or .png
+        raw_image_name_list = [f for f in os.listdir(raw_image_path) if f.endswith(('.jpg', '.png'))]
         raw_image_name_list.sort()
         for raw_image_name in raw_image_name_list:
             image_path = os.path.join(raw_image_path, raw_image_name)
@@ -61,6 +62,7 @@ class CommonUtils:
             all_object_boxes = []
             all_object_ids = []
             all_class_names = []
+            all_object_scores = []
             object_id_to_name = {}
             with open(file_path, "r") as file:
                 json_data = json.load(file)
@@ -74,11 +76,12 @@ class CommonUtils:
                     all_object_boxes.append([x1, y1, x2, y2])
                     # box name
                     class_name = obj_item["class_name"]
-                    
+                    score = obj_item["score"]
                     # build id list and id2name mapping
                     all_object_ids.append(instance_id)
                     all_class_names.append(class_name)
                     object_id_to_name[instance_id] = class_name
+                    all_object_scores.append(score)
             
             # Adjust object id and boxes to ascending order
             paired_id_and_box = zip(all_object_ids, all_object_boxes)
@@ -96,7 +99,7 @@ class CommonUtils:
             
             # custom label to show both id and class name
             labels = [
-                f"{instance_id}: {class_name}" for instance_id, class_name in zip(all_object_ids, all_class_names)
+                f"id {instance_id}, score {score:.2f}" for instance_id, class_name, score in zip(all_object_ids, all_class_names, all_object_scores)
             ]
             
             box_annotator = sv.BoxAnnotator()
