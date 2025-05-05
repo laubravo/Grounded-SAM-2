@@ -73,6 +73,9 @@ class MaskDictionaryModel:
     def get_target_logit(self, instance_id):
         return self.labels[instance_id].logit
     
+    def get_target_score(self, instance_id):
+        return self.labels[instance_id].score
+    
     @staticmethod
     def calculate_iou(mask1, mask2):
         # Convert masks to float tensors for calculations
