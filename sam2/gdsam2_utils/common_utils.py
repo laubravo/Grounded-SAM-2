@@ -24,11 +24,16 @@ class CommonUtils:
             print(f"An error occurred while creating the path: {e}")
 
     @staticmethod
-    def draw_masks_and_box_with_supervision(raw_image_path, mask_path, json_path, output_path):
+    def draw_masks_and_box_with_supervision(raw_image_path, mask_path, json_path, output_path, valid_frames=None):
         CommonUtils.creat_dirs(output_path)
         # get all image name that ends with .jpg or .png
         raw_image_name_list = [f for f in os.listdir(raw_image_path) if f.endswith(('.jpg', '.png'))]
         raw_image_name_list.sort()
+        
+        if valid_frames is not None:
+            # keep only the valid frames
+            raw_image_name_list = [f for f in raw_image_name_list if f.split(".")[0] in valid_frames]
+
         for raw_image_name in raw_image_name_list:
             image_path = os.path.join(raw_image_path, raw_image_name)
             image = cv2.imread(image_path)
